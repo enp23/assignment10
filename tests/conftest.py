@@ -35,7 +35,8 @@ fake = Faker()
 Faker.seed(12345)
 
 # Added test database URL configuration
-settings.DATABASE_URL = settings.DATABASE_URL.rsplit("/", 1)[0] + "/fastapi_test_db"
+if "test" not in settings.DATABASE_URL:
+    settings.DATABASE_URL = settings.DATABASE_URL.rsplit("/", 1)[0] + "/fastapi_test_db"
 
 logger.info(f"Using database URL: {settings.DATABASE_URL}")
 

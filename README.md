@@ -63,6 +63,39 @@ uvicorn main:app --reload
 8. **Build and start the application, database, and pgAdmin in Docker:**
 docker compose up --build
 
+## Running Tests
+
+Tests run against a dedicated test database, kept separate from the `fastapi_db` development database, so test runs never read or write real dev data. Locally, this is `fastapi_test_db`, set automatically via an override in `conftest.py`. The GitHub Actions workflow provides its own PostgreSQL service container with a separate test database (`mytestdb`), configured directly in the workflow file.
+
+### Running tests locally
+
+1. **Start the database:**
+```bash
+   docker compose up -d
+```
+
+2. **Create the test database** (one-time setup):
+```bash
+   docker exec -it postgres_db psql -U postgres -c "CREATE DATABASE fastapi_test_db;"
+```
+   If it already exists, this will show a harmless "database already exists" message.
+
+3. **Run the test suite:**
+```bash
+   pytest
+```
+
+Tables are created automatically at the start of the test run and truncated between tests, so no manual schema setup is needed beyond creating the database itself.
+
+**Useful flags:**
+- `pytest -v` — verbose output
+- `pytest --preserve-db` — keep test data after the run instead of truncating tables (useful for debugging)
+- `pytest --run-slow` — include tests marked as slow (skipped by default)
+
+### Running tests in CI
+
+Tests also run automatically in GitHub Actions on every push to `main` and on pull requests, using a separate PostgreSQL service container (database name `mytestdb`). See `.github/workflows/` for the full pipeline (test → security scan → deploy).
+
 ## Docker Hub
 
 [https://hub.docker.com/repository/docker/en23/assignment10/](https://hub.docker.com/repository/docker/en23/assigment10/)

@@ -1,264 +1,68 @@
-# 📦 Project Setup
+# Module 10
 
----
+This module builds on the FastAPI Calculator by adding a PostgreSQL database and pgAdmin for data persistence and management, alongside a secure user model, Pydantic validation, and an end-to-end CI/CD pipeline that tests and deploys the application via GitHub Actions and Docker Hub.
 
-# 🧩 1. Install Homebrew (Mac Only)
+## Key Components
 
-> Skip this step if you're on Windows.
+1. **Dockerfile** — Sets up a Docker container for a FastAPI Calculator Application by using the `mcr.microsoft.com/playwright/python:v1.47.0-noble` image as the base, installing necessary system packages and Python dependencies, creating a non-root user with sudo access, and configuring the environment to run the application.
+2. **docker-compose.yml** — Defines a multi-service application, including a FastAPI web service, a PostgreSQL database (`postgres:16`), and pgAdmin for database management, specifying their configurations, health checks, dependencies, and networking to facilitate seamless integration and deployment.
+3. **main.py** — Defines the FastAPI application, including API endpoints for basic arithmetic operations (add, subtract, multiply, divide) and serving the HTML page, utilizing Pydantic models for input validation and Jinja2 templates for rendering responses.
+4. **app/models/user.py** — Defines the `User` model, including password hashing (via `bcrypt`), JWT-based token creation/verification, and user registration/authentication logic.
+5. **app/schemas/user.py** — Pydantic schemas that validate user data (e.g., email format, password requirements) before it ever reaches the database.
+6. **app/operations.py** — Contains arithmetic functions (`add`, `subtract`, `multiply`, `divide`).
+7. **templates/index.html** — The HTML frontend that interacts with the API.
 
-Homebrew is a package manager for macOS.  
-You’ll use it to easily install Git, Python, Docker, etc.
+## Requirements
 
-**Install Homebrew:**
+- Python 3.12
+- Docker and Docker Compose
 
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
+## Security & Validation
 
-**Verify Homebrew:**
+- **Passwords** are never stored in plain text — they're hashed using `bcrypt` (via `passlib`'s `CryptContext`) before being saved to the database.
+- **Authentication** uses JWT access tokens, created and verified with `python-jose`.
+- **Input validation** is handled by Pydantic schemas (`app/schemas/user.py`), which enforce field requirements (e.g., valid email format, minimum password length) and reject malformed data before it reaches the database or the `User` model.
 
-```bash
-brew --version
-```
+## Database
 
-If you see a version number, you're good to go.
+This project uses **PostgreSQL** to persist user and calculation data, with **pgAdmin** as a web-based interface for managing the database directly.
 
----
+- **Database:** `fastapi_db`
+- **Tables:** `users`, `calculations` (linked by a foreign key on `user_id`)
+- **pgAdmin access:** `http://localhost:5050`
+  - Email: `admin@example.com`
+  - Password: `admin`
+  - Server host: `db` (Docker service name), Port: `5432`
 
-# 🧩 2. Install and Configure Git
+## Setting Up the Development Environment
 
-## Install Git
+1. **Clone the repository:**
+git clone https://github.com/enp23/assignment10.git
 
-- **MacOS (using Homebrew)**
+2. **Navigate to the project directory:**
+cd assignment10
 
-```bash
-brew install git
-```
+3. **Create a virtual environment:**
+python -m venv venv
+source venv/bin/activate  # On Windows use venv\Scripts\activate
 
-- **Windows**
-
-Download and install [Git for Windows](https://git-scm.com/download/win).  
-Accept the default options during installation.
-
-**Verify Git:**
-
-```bash
-git --version
-```
-
----
-
-## Configure Git Globals
-
-Set your name and email so Git tracks your commits properly:
-
-```bash
-git config --global user.name "Your Name"
-git config --global user.email "your_email@example.com"
-```
-
-Confirm the settings:
-
-```bash
-git config --list
-```
-
----
-
-## Generate SSH Keys and Connect to GitHub
-
-> Only do this once per machine.
-
-1. Generate a new SSH key:
-
-```bash
-ssh-keygen -t ed25519 -C "your_email@example.com"
-```
-
-(Press Enter at all prompts.)
-
-2. Start the SSH agent:
-
-```bash
-eval "$(ssh-agent -s)"
-```
-
-3. Add the SSH private key to the agent:
-
-```bash
-ssh-add ~/.ssh/id_ed25519
-```
-
-4. Copy your SSH public key:
-
-- **Mac/Linux:**
-
-```bash
-cat ~/.ssh/id_ed25519.pub | pbcopy
-```
-
-- **Windows (Git Bash):**
-
-```bash
-cat ~/.ssh/id_ed25519.pub | clip
-```
-
-5. Add the key to your GitHub account:
-   - Go to [GitHub SSH Settings](https://github.com/settings/keys)
-   - Click **New SSH Key**, paste the key, save.
-
-6. Test the connection:
-
-```bash
-ssh -T git@github.com
-```
-
-You should see a success message.
-
----
-
-# 🧩 3. Clone the Repository
-
-Now you can safely clone the course project:
-
-```bash
-git clone <repository-url>
-cd <repository-directory>
-```
-
----
-
-# 🛠️ 4. Install Python 3.10+
-
-## Install Python
-
-- **MacOS (Homebrew)**
-
-```bash
-brew install python
-```
-
-- **Windows**
-
-Download and install [Python for Windows](https://www.python.org/downloads/).  
-✅ Make sure you **check the box** `Add Python to PATH` during setup.
-
-**Verify Python:**
-
-```bash
-python3 --version
-```
-or
-```bash
-python --version
-```
-
----
-
-## Create and Activate a Virtual Environment
-
-(Optional but recommended)
-
-```bash
-python3 -m venv venv
-source venv/bin/activate   # Mac/Linux
-venv\Scripts\activate.bat  # Windows
-```
-
-### Install Required Packages
-
-```bash
+4. **Install dependencies:**
 pip install -r requirements.txt
-```
 
----
+5. **Run the application:**
+uvicorn main:app --reload
 
-# 🐳 5. (Optional) Docker Setup
+6. **Access the application:**
+   Open a web browser and navigate to `http://localhost:8000`.
 
-> Skip if Docker isn't used in this module.
+7. **Stop the application:**
+   Press `CTRL + C`.
 
-## Install Docker
+### Running with Docker
 
-- [Install Docker Desktop for Mac](https://www.docker.com/products/docker-desktop/)
-- [Install Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+8. **Build and start the application, database, and pgAdmin in Docker:**
+docker compose up --build
 
-## Build Docker Image
+## Docker Hub
 
-```bash
-docker build -t <image-name> .
-```
-
-## Run Docker Container
-
-```bash
-docker run -it --rm <image-name>
-```
-
----
-
-# 🚀 6. Running the Project
-
-- **Without Docker**:
-
-```bash
-python main.py
-```
-
-(or update this if the main script is different.)
-
-- **With Docker**:
-
-```bash
-docker run -it --rm <image-name>
-```
-
----
-
-# 📝 7. Submission Instructions
-
-After finishing your work:
-
-```bash
-git add .
-git commit -m "Complete Module X"
-git push origin main
-```
-
-Then submit the GitHub repository link as instructed.
-
----
-
-# 🔥 Useful Commands Cheat Sheet
-
-| Action                         | Command                                          |
-| ------------------------------- | ------------------------------------------------ |
-| Install Homebrew (Mac)          | `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` |
-| Install Git                     | `brew install git` or Git for Windows installer |
-| Configure Git Global Username  | `git config --global user.name "Your Name"`      |
-| Configure Git Global Email     | `git config --global user.email "you@example.com"` |
-| Clone Repository                | `git clone <repo-url>`                          |
-| Create Virtual Environment     | `python3 -m venv venv`                           |
-| Activate Virtual Environment   | `source venv/bin/activate` / `venv\Scripts\activate.bat` |
-| Install Python Packages        | `pip install -r requirements.txt`               |
-| Build Docker Image              | `docker build -t <image-name> .`                |
-| Run Docker Container            | `docker run -it --rm <image-name>`               |
-| Push Code to GitHub             | `git add . && git commit -m "message" && git push` |
-
----
-
-# 📋 Notes
-
-- Install **Homebrew** first on Mac.
-- Install and configure **Git** and **SSH** before cloning.
-- Use **Python 3.10+** and **virtual environments** for Python projects.
-- **Docker** is optional depending on the project.
-
----
-
-# 📎 Quick Links
-
-- [Homebrew](https://brew.sh/)
-- [Git Downloads](https://git-scm.com/downloads)
-- [Python Downloads](https://www.python.org/downloads/)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [GitHub SSH Setup Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh)
+[https://hub.docker.com/repository/docker/en23/assignment10/](https://hub.docker.com/repository/docker/en23/assigment10/)
